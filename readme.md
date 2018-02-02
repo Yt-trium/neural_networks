@@ -12,8 +12,7 @@ Ce projet contient:
  
  
  TODO : 
- * des schémas plus détaillé pour les réseaux neuronaux.
- * des exemple avec des données plus conséquentes
+ * des exemples avec des données plus conséquentes
  * utiliser le bas de VGG plutôt que celui de LeNet
   
  
@@ -21,10 +20,10 @@ Ce projet contient:
   [THE BASIC EXAMPLE](ne_ne/THE_BASIC_EXAMPLE.py)  
   --------------------------------------
   
-  Il s'git d'un modèle linéaire avec une pénalisation L2 (on l'appelle aussi modèle ridge): 
+  Il s'agit d'un modèle linéaire avec une pénalisation L2 (on l'appelle aussi modèle ridge): 
   
   > Y_hat = a X + b  
-  > loss = (Y-Y_hat)^2 + a^2
+  > loss = (Y-Y_hat)^2 +  cst*a^2
  
  
  Ce "BASIC-EXAMPLE" permet de voir la structure typique 
@@ -35,12 +34,13 @@ Ce projet contient:
  
  
  Ce qu'on peut aussi apprendre dans ce fichier:
- * comment utiliser tensorboard : un outil de visualisation propre à tensorflow. 
+ * comment utiliser tensorboard : un outil de visualisation propre à tensorflow. On y affiche notamment les gradients
  * comment sauver et restaurer un modèle. 
  * comment changer les hyper-paramètres durant l'apprentissage : le learning_rate, la pénalisation L^2  
  
  
- Les données générée sont des points alignées. L'apprentissage est immédiat. Nous affichons la courbe
+ Les données générée sont des points alignées selon une équation y =ax+b. 
+ L'apprentissage de 'a' et 'b' est immédiat. Nous affichons la courbe
  de loss pour voir l'effet du changement des hyper-paramètres. 
  
  
@@ -81,7 +81,7 @@ Attention : la formule de cette loss n'est pas la même en mono ou multi-label
 [Bounding box](ne_ne/TasteExample/B_bounding_box.py)
 ---------------------------------------------
 
-Il s'agit de reconnaître des disques ou des carré, mais aussi de les localiser avec
+Il s'agit de reconnaître des disques ou des carrés, mais aussi de les localiser avec
 des bounding box.  Volontairement les bounding box ne sont pas 
 paramétrées de la même façon pour les disques ou les carrés. Cela oblige le modèle à d'abord
 reconnaître la classe avant d'estimer la bounding box. 
@@ -118,8 +118,17 @@ On y branche deux couches de convolutions 1*1
 Puis commencent des up-convolutions. Ces opérations augmentent la taille des images. 
 On en met deux couches pour retrouver la résolution initiale. 
 
-![semgentation](ne_ne/results/C_both_catego_hidden/Figure_4.png)
 
+![architecture](ne_ne/results/fullyConv.png)
+
+
+Voici les résultats obtenus avec un learning rate de 1e-3, avec 1000 itérations.
+On voit qu'on a des problèmes sur les bords. Mais sinon c'est OK. 
+
+
+![probas](ne_ne/results/C_both_catego_hidden/Figure_4.png)
+
+![ground truth](ne_ne/results/C_both_catego_hidden/Figure_3.png)
 
 
 

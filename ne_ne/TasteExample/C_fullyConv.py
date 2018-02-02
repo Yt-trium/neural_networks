@@ -36,8 +36,6 @@ class Hat_fullyConv:
             relu = tf.nn.relu(conv, name="relu")
             relu_dropout = tf.nn.dropout(relu, keep_prob=keep_prob,name="dropout")
 
-            ing.summarizeW(W,nbImg=0)
-            tf.summary.histogram("b",b)
 
 
 
@@ -51,9 +49,6 @@ class Hat_fullyConv:
             relu = tf.nn.relu(conv, name="relu")
             relu_dropout = tf.nn.dropout(relu, keep_prob=keep_prob, name="dropout")
 
-            ing.summarizeW(W,nbImg=0)
-            tf.summary.histogram("b", b)
-
 
 
         """  DANS LA SUITE : on dilate les images 7*7 pour revenir à la résolution initiale 28*28  """
@@ -63,14 +58,13 @@ class Hat_fullyConv:
         with tf.variable_scope("dilate0"):
 
             """  [height, width, output_channels, in_channels=nbCategories] """
-            W = tf.Variable(initial_value=ing.get_bilinear_initial_tensor([4, 4, 32, nbCategories],2))
+            W = tf.Variable(initial_value=ing.get_bilinear_initial_tensor([4, 4, 32, nbCategories],2),name='W')
             b = ing.bias_variable([32], name="b")
             upConv0 = ing.up_convolution(relu_dropout, W, 2, 2) + b
             """on y ajoute le milieu de leNet (14*14*32 aussi)"""
             fuse_1 = upConv0 + leNet.pool1
 
-            ing.summarizeW(W)
-            tf.summary.histogram("b", b)
+            ing.summarizeW_asImage(W)
 
 
 
@@ -79,11 +73,10 @@ class Hat_fullyConv:
            14*14*32 ----> 28*28*nbCategories
         """
         with tf.variable_scope("dilate1"):
-            W = tf.Variable(initial_value=ing.get_bilinear_initial_tensor([4, 4, nbCategories, 32],2))
+            W = tf.Variable(initial_value=ing.get_bilinear_initial_tensor([4, 4, nbCategories, 32],2),name='W')
             b = ing.bias_variable([nbCategories], name="b")
 
-            ing.summarizeW(W)
-            tf.summary.histogram("b", b)
+            ing.summarizeW_asImage(W)
 
 
 
@@ -115,7 +108,7 @@ class Model_fullyConv:
 
 
         self.keep_proba=tf.get_variable("keep_proba",initializer=1.,trainable=False)
-        self.learning_rate=tf.get_variable("learning_rate",initializer=1e-2,trainable=False)
+        self.learning_rate=tf.get_variable("learning_rate",initializer=1e-3,trainable=False)
 
         self.hat=Hat_fullyConv(self._X, nbChannels, nbCategories, self.keep_proba,favoritism)
 
@@ -133,7 +126,19 @@ class Model_fullyConv:
 
 
 
-        self._minimizer = tf.train.AdamOptimizer(1e-4).minimize(self._loss)
+
+        """ optimizer, monitoring des gradients """
+        self._optimizer = tf.train.AdamOptimizer(self.learning_rate)
+        self._grads_vars = self._optimizer.compute_gradients(self._loss)
+        for index, grad in enumerate(self._grads_vars):
+            tf.summary.histogram("{}-grad".format(self._grads_vars[index][1].name), self._grads_vars[index][0])
+            tf.summary.histogram("{}-var".format(self._grads_vars[index][1].name), self._grads_vars[index][1])
+
+
+        """ la minimisation est faite via cette op:  """
+        self._minimizer = self._optimizer.apply_gradients(self._grads_vars)
+
+
 
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
@@ -316,7 +321,6 @@ def taste():
 
 
     """ TEST"""
-
     X_test,Y_test = X_val[:16],Y_val[:16]
     hat_Y_test_cat,hat_Y_test_proba=model.predict(X_test)
     X_test=X_test.reshape([16,28,28])

@@ -191,12 +191,38 @@ def batch_norm(x, n_out, phase_train, scope='bn', decay=0.9, eps=1e-5):
 
 
 
-def summarizeW(W,name="W",nbImg=4):
-    if nbImg>0 :
-        W_tr=tf.transpose(W, [2, 0, 1, 3])
-        tf.summary.image(name,W_tr[:,:,:,:1] , max_outputs=nbImg)
-    tf.summary.histogram(name, W)
-    tf.summary.scalar(name, tf.nn.zero_fraction(W))
+
+
+def summarizeW_asImage(W):
+    print("W_shape",W.name,W.get_shape().as_list())
+    mat=stick_imgs(W)
+    mat_shape=mat.get_shape().as_list()
+    mat=tf.reshape(mat,shape=[1,mat_shape[0],mat_shape[1],1])
+    tf.summary.image(W.name,mat, max_outputs=1)
+
+
+def stick_imgs(W, nbChannel2=10, nbChannel3=10):
+
+    W_shape = W.get_shape().as_list()
+    nb0=min(nbChannel2, W_shape[2])
+    nb1=min(nbChannel3, W_shape[3])
+
+    sep=tf.constant(1.,shape=(1,W_shape[1]))
+    columns=[]
+    for j in range(nb1):
+        Ws=[]
+        for i in range(nb0):
+            Ws.append(W[:,:,i,j])
+            Ws.append(sep)
+        column=tf.concat(Ws,0)
+        shape_Ligne = column.get_shape().as_list()
+        sep_column=tf.constant(1.,shape=[shape_Ligne[0],1])
+        columns.append(column)
+        columns.append(sep_column)
+    mat=tf.concat(columns,1)
+
+    return mat
+
 
 
 #

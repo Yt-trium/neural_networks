@@ -4,14 +4,22 @@ import numpy as np
 
 
 """Le bas du réseau de Yann Le Cun. 
-Les images d'entrées sont de 28*28 pixels
+Les images d'entrées sont de 28*28 pixels. La structure :
+
+        [Conv5*5 > relu > max_pool2*2]  *2    
+
+TODO : faire la même chose * 3, * 4 en fonction de la taille des images et de leur complexité. 
+
+TODO : la mode c'est plutôt de faire des : 
+        [Conv3*3 > relu > Conv3*3 > relu> max_pool2*2] * n
+
 """
 class LeNet_bottom:
 
     def __init__(self,X:tf.Tensor,nbChannels:int):
 
         self.nbChannels=nbChannels
-        nbSummaryOutput=8
+        nbSummaryOutput=4
 
         """"""
         ''' couche de convolution 1'''
@@ -19,15 +27,12 @@ class LeNet_bottom:
             W_conv1 = ing.weight_variable([5, 5, self.nbChannels, 32],name="W")
             b_conv1 = ing.bias_variable([32],name="b")
 
-
             self.filtred1=tf.nn.relu(ing.conv2d_basic(X,W_conv1,b_conv1))
             """ shape=(?,14*14,nbChannels)  """
             self.pool1 =ing.max_pool_2x2(self.filtred1)
 
-            tf.summary.image("W_conv", tf.transpose(W_conv1, [3, 0, 1, 2]), max_outputs=nbSummaryOutput)
+            ing.summarizeW_asImage(W_conv1)
             tf.summary.image("filtred", self.filtred1[:, :, :, 0:1], max_outputs=nbSummaryOutput)
-            tf.summary.histogram("W_conv", W_conv1)
-            tf.summary.scalar("W_conv_zero_fraction", tf.nn.zero_fraction(W_conv1))
 
 
 
@@ -42,11 +47,10 @@ class LeNet_bottom:
             """ shape=(?,7*7,nbChannels)  """
             self.pool2 =ing.max_pool_2x2(self.filtred2)
 
-
-            tf.summary.image("W_conv",tf.transpose(W_conv1,[3,0,1,2]),max_outputs=12)
+            ing.summarizeW_asImage(W_conv2)
             tf.summary.image("filtred",self.filtred2[:,:,:,0:1],max_outputs=12)
-            tf.summary.histogram("W_conv", W_conv2)
-            tf.summary.scalar("W_conv_zero_fraction", tf.nn.zero_fraction(W_conv2))
+
+
 
 
         """un alias pour la sortie"""

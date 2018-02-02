@@ -18,7 +18,7 @@ class Model_ridge:
         self._Y = tf.placeholder(name="Y", dtype=tf.float32)
 
 
-        """ 2 variables non trainable """
+        """ 2 variables non-trainable """
         self.learning_rate=tf.get_variable("learning_rate",initializer=1e-4,trainable=False)
         """pénalisation L2"""
         self.wei_decay=tf.get_variable("wei_decay",initializer=0.1,trainable=False)
@@ -38,15 +38,34 @@ class Model_ridge:
         self._Y_hat = self.a*self._X+self.b
 
         self._loss = tf.reduce_mean((self._Y - self._Y_hat) ** 2) + self.wei_decay * self.a ** 2
-        summary_entropy=tf.summary.scalar("entropy", self._loss)
+        summary_entropy=tf.summary.scalar("loss", self._loss)
         summary_a=tf.summary.scalar("a", self.a)
         summary_b=tf.summary.scalar("b", self.b)
 
         self._summary_op = tf.summary.merge([summary_entropy,summary_a,summary_b]) #ou bien tf.summary.merge_all()
 
 
-        """ ATTENTION :  certain optimizer (tel Adam)  ne veulent pas que "global_variables_initializer" soient lancée AVANT que l'optimizer soit entré dans le graph tf"""
-        self._minimizer = tf.train.AdamOptimizer(self.learning_rate).minimize(self._loss)
+        """ 
+        Nous précisons l'algo de minimisation et la quantité à minimiser. Sela peux se faire en une ligne:
+                self._minimizer =  tf.train.AdamOptimizer(self.learning_rate).minimize(self._loss)
+        Mais nous le faisons en deux étapes pour pouvoir observer les gradients. 
+        
+        ATTENTION :  certain optimizer (tel Adam)  ne veulent pas que "global_variables_initializer" soient lancée 
+        AVANT que l'optimizer soit entré dans le graph tf. """
+
+        """ l'algo """
+        self._opt = tf.train.GradientDescentOptimizer(self.learning_rate)
+        """ les gradients: une liste de paires [Gradient, Variable]. On récupère le nom des variables. """
+        self._grads_vars = self._opt.compute_gradients(self._loss)
+        self.varName=[grad[1].name for grad in self._grads_vars]
+        # for index, grad in enumerate(grads):
+        #     tf.summary.histogram("{}-grad".format(grads[index][1].name), grads[index])
+
+        """ la minimisation est faite via cette op:  """
+        self._minimizer = self._opt.apply_gradients(self._grads_vars)
+
+
+
 
         """pour sauver les variables du modèle"""
         self._saver = tf.train.Saver()
@@ -56,7 +75,7 @@ class Model_ridge:
 
         """l'initialization des variables se fait une seule fois.
                  En particulier, un second a appel de self.fit() améliore le travail du précédent
-                  en changeant les xToY.wei """
+                  en modifiant les variables trainable """
         if savedir is None: self.sess.run(tf.global_variables_initializer())
         else : self._saver.restore(self.sess, savedir)
 
@@ -90,11 +109,14 @@ class Model_ridge:
         trainProcess = self._minimizer if fit else tf.constant(0.)
 
 
-        _,self.loss,self.summary_op=self.sess.run([trainProcess, self._loss, self._summary_op], {self._X: X, self._Y: Y})
+        _, self.loss, self.grads_vars, self.summary_op=\
+            self.sess.run([trainProcess, self._loss, self._grads_vars, self._summary_op], {self._X: X, self._Y: Y})
 
 
         if self.verbose:
             print("loss:", self.loss)
+            for name,grad_var in zip(self.varName,self.grads_vars):
+                print("variable ", name, "\tgrad:",grad_var[0], "\tvalue (after grad-subtraction): ",grad_var[1])
 
 
     def fit(self, X_train, Y_train):
@@ -117,13 +139,16 @@ class Model_ridge:
 
 
 
+
+
+
 def unitaryTaste():
     """
     On  entraîne (=fit) le modèle ridge, en changeant les paramètres.
     On observe la courbe de loss.
 
     Pour observer les différents summary sur le tensorboard:
-    ouvrez une console. Taper tensorboard -logdir VOTRE_LOG_DIR
+    ouvrez une console. Taper tensorboard --logdir VOTRE_LOG_DIR
     puis mettez l'url proposer dans le navigateur.
     Attention : à chaque relance du programme python,
     - il faut vider le logdir (c'est fait automatiquement ci-dessous)
@@ -148,6 +173,7 @@ def unitaryTaste():
     summary_writer = tf.summary.FileWriter(logDir,model.sess.graph)
 
     for itr in range(60):
+        print("itr:",itr)
 
         if itr==20:
             model.sess.run(model.learning_rate.assign(0.1))
