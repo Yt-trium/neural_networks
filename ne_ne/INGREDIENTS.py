@@ -204,15 +204,19 @@ def summarizeW_asImage(W):
 def stick_imgs(W, nbChannel2=10, nbChannel3=10):
 
     W_shape = W.get_shape().as_list()
-    nb0=min(nbChannel2, W_shape[2])
-    nb1=min(nbChannel3, W_shape[3])
+
+
+    nb2=min(nbChannel2, W_shape[2])
+    nb3=min(nbChannel3, W_shape[3])
 
     sep=tf.constant(1.,shape=(1,W_shape[1]))
+    noImg=tf.constant(1.,shape=(W_shape[0],W_shape[1]))
     columns=[]
-    for j in range(nb1):
+    for j in range(nbChannel3):
         Ws=[]
-        for i in range(nb0):
-            Ws.append(W[:,:,i,j])
+        for i in range(nbChannel2):
+            if i<nb2 and j<nb3: Ws.append(W[:,:,i,j])
+            else: Ws.append(noImg)
             Ws.append(sep)
         column=tf.concat(Ws,0)
         shape_Ligne = column.get_shape().as_list()
