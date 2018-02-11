@@ -1,6 +1,6 @@
 import matplotlib
+
 matplotlib.use('TkAgg') #truc bizarre à rajouter spécifique à mac+virtualenv
-import matplotlib.pyplot as plt
 import imageio
 import numpy as np
 np.set_printoptions(precision=2,linewidth=3000)
@@ -25,6 +25,8 @@ def addSquareVignette(sizes, cornerPosition, img, groundTrueImg):
     groundTrueImg[end_x-1,deb_y:end_y]*=0
     groundTrueImg[deb_x:end_x,deb_y]*=0
     groundTrueImg[deb_x:end_x,end_y-1]*=0
+
+
 
 
 
@@ -69,6 +71,8 @@ def addCircleVignette(diameter, center, img):
 
 
 
+
+
 def createImgOneVignette(typeImg:str):
 
     totalSize = IMG_SIZE
@@ -98,15 +102,11 @@ def createImgOneVignette(typeImg:str):
                     addCircleVignette(diameter//2,center,groundTruthImg)
                     nbVignette += 1
 
-            #label.append([*pos, *sizeVignette])
-
-
 
         imageio.imwrite(typeImg+"/img_"+str(i)+".png",img)
         imageio.imwrite(typeImg+"/gt_"+str(i)+".png",groundTruthImg)
 
-        #np.savetxt("data2/"+typeImg+"/aaa_labels.csv",label,fmt="%0.2f",header="pos_x, pos_y, size_x,size_y")
 
 
-createImgOneVignette("blurCircles")
+
 
