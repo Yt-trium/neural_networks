@@ -126,11 +126,46 @@ Voici les résultats obtenus avec un learning rate de 1e-3, avec 1000 itération
 On voit qu'on a des problèmes sur les bords. Mais sinon c'est OK. 
 
 
-![probas](ne_ne/results/C_both_catego_hidden/Figure_4.png)
-
-![ground truth](ne_ne/results/C_both_catego_hidden/Figure_3.png)
 
 
+![ground truth](ne_ne/results/C_both_catego_hidden/Figure_3.png)![probas](ne_ne/results/C_both_catego_hidden/Figure_4.png)
+
+
+
+[inférence sur des lignes](ne_ne/TasteExample/D_learningLines.py)
+--------------------------------------------------
+
+Le modèle est le même que précédemment. On repère :
+
+* Des segments, en estimant leur orientation (4 classes d'orientations)
+
+![](ne_ne/results/D_Y_is_orientation/Figure_2_600itr.png) 
+
+![](ne_ne/results/D_Y_is_orientation/Figure_3_600itr.png) ![](ne_ne/results/D_Y_is_orientation/Figure_4_600itr.png) 
+
+
+* Des lignes brisées, en estimant leur épaisseurs (2 classes d'épaisseurs)
+
+![](ne_ne/results/D_Y_is_width/Figure_2.png) 
+
+![](ne_ne/results/D_Y_is_width/Figure_3.png) ![](ne_ne/results/D_Y_is_width/Figure_4.png) 
+
+
+* Des lignes brisées en repérant leur cassures.
+Cela marche moins bien. Ci-dessous nous affichons les probabilités des 3 catégories :
+
+- cat 1 :  demi-tours, en particulier le début et la fin de la ligne
+- cat 2 :  proche d'un angle droit
+- cat 3 :  proche d'un angle plat = tous les autres points de la ligne  
+
+
+![](ne_ne/results/D_Y_is_angle/Figure_2.png) 
+![](ne_ne/results/D_Y_is_angle/Figure_3.png) 
+
+![](ne_ne/results/D_Y_is_angle/Figure_4.png) 
+![](ne_ne/results/D_Y_is_angle/Figure_5.png) 
+
+![](ne_ne/results/D_Y_is_angle/Figure_6.png) 
 
 
 
