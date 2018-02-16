@@ -73,12 +73,26 @@ def get_bilinear_initial_tensor(filter_shape, upscale_factor):
 
 """ ici :https://stackoverflow.com/questions/33712178/tensorflow-nan-bug
 ils indique que faire un clip sur Y_hay n'est pas une bonne idée car cela arrète la propagation du gradient... 
-J'ai tester  :  un clip  "grossier"  ex : tf.clip_by_value(Y_hat, 0.0001, 0.9999)  tue vraiment l'apprentissage.
-Un clip plus fin ne change pas grand chose.
+J'ai tester  :  un clip  "grossier"  ex : tf.clip_by_value(Y_hat, 0.0001, 0.9999) : cela tue vraiment l'apprentissage.
+Un clip plus fin ne change pas grand chose, mais il faudrait faire des tests plus poussé.
    """
-def crossEntropy(Y, Y_hat, avoidNan=True):
-    if avoidNan:  Y_hat+=1e-10
-    return - tf.reduce_mean(Y*tf.log(Y_hat))
+def crossEntropy(Y, Y_hat, axis=None):
+    return - tf.reduce_mean(Y*tf.log(Y_hat+1e-10),axis=axis)
+
+
+""" d'après https://stackoverflow.com/questions/33712178/tensorflow-nan-bug.
+ Mais c'est vraiment trop long (4 fois plus long d'après le test ci-dessous)
+ """
+def crossEntropy_tooSlow(x, y, axis=None):
+  safe_y = tf.where(tf.equal(x, 0.), tf.ones_like(y), y)
+  return -tf.reduce_mean(x * tf.log(safe_y), axis=axis)
+
+
+
+""" Parfois mon modèle peut prédire des proba>1 : c'est mal. 
+  Il faut pénaliser """
+def crossEntropy_forProbaGreaterThatOne(Y, Y_hat):
+    return - tf.reduce_mean(Y*tf.log(Y_hat+1e-10))
 
 
 def quadraticLoss(Y, Y_hat):
@@ -229,121 +243,39 @@ def stick_imgs(W, nbChannel2=10, nbChannel3=10):
 
 
 
-#
-# """d'après http://cv-tricks.com/image-segmentation/transpose-convolution-in-tensorflow/"""
-# def get_bilinear_filter(filter_shape, upscale_factor):
-#     ##filter_shape is [width, height, num_in_channels, num_out_channels]
-#     kernel_size = filter_shape[1]
-#     ### Centre location of the filter for which value is calculated
-#     if kernel_size % 2 == 1:
-#         centre_location = upscale_factor - 1
-#     else:
-#         centre_location = upscale_factor - 0.5
-#
-#     bilinear = np.zeros([filter_shape[0], filter_shape[1]])
-#     for x in range(filter_shape[0]):
-#         for y in range(filter_shape[1]):
-#             ##Interpolation Calculation
-#             value = (1 - abs((x - centre_location) / upscale_factor)) * (1 - abs((y - centre_location) / upscale_factor))
-#             bilinear[x, y] = value
-#     weights = np.zeros(filter_shape)
-#     for i in range(filter_shape[2]):
-#         weights[:, :, i, i] = bilinear
-#     init = tf.constant_initializer(value=weights,dtype=tf.float32)
-#
-#     bilinear_weights = tf.get_variable(name="decon_bilinear_filter", initializer=init,
-#                                        shape=weights.shape)
-#     return bilinear_weights
-#
-#
-#
-# def upsample_layer(bottom, n_channels, name, upscale_factor):
-#
-#     kernel_size = 2 * upscale_factor - upscale_factor % 2
-#     stride = upscale_factor
-#     strides = [1, stride, stride, 1]
-#     with tf.variable_scope(name):
-#         # Shape of the bottom tensor
-#         in_shape = tf.shape(bottom)
-#
-#         h = ((in_shape[1] - 1) * stride) + 1
-#         w = ((in_shape[2] - 1) * stride) + 1
-#         new_shape = [in_shape[0], h, w, n_channels]
-#         output_shape = tf.stack(new_shape)
-#
-#         filter_shape = [kernel_size, kernel_size, n_channels, n_channels]
-#
-#         weights = get_bilinear_filter(filter_shape, upscale_factor)
-#         deconv = tf.nn.conv2d_transpose(bottom, weights, output_shape,strides=strides, padding='SAME')
-#
-#     return deconv
-#
-#
-#
-#
-# def upconvolution(input, output_channel_size, filter_size_h, filter_size_w,
-#                   stride_h, stride_w, init_w, init_b, layer_name,
-#                   dtype=tf.float32, data_format="NHWC", padding='VALID'):
-#     with tf.variable_scope(layer_name):
-#         # calculation of the output_shape:
-#         if data_format == "NHWC":
-#             input_channel_size = input.get_shape().as_list()[3]
-#             input_size_h = input.get_shape().as_list()[1]
-#             input_size_w = input.get_shape().as_list()[2]
-#             stride_shape = [1, stride_h, stride_w, 1]
-#             if padding == 'VALID':
-#                 output_size_h = (input_size_h - 1) * stride_h + filter_size_h
-#                 output_size_w = (input_size_w - 1) * stride_w + filter_size_w
-#             elif padding == 'SAME':
-#                 output_size_h = (input_size_h - 1) * stride_h + 1
-#                 output_size_w = (input_size_w - 1) * stride_w + 1
-#             else:
-#                 raise ValueError("unknown padding")
-#             output_shape = tf.stack([tf.shape(input)[0],
-#                                      output_size_h, output_size_w,
-#                                      output_channel_size])
-#         elif data_format == "NCHW":
-#             input_channel_size = input.get_shape().as_list()[1]
-#             input_size_h = input.get_shape().as_list()[2]
-#             input_size_w = input.get_shape().as_list()[3]
-#             stride_shape = [1, 1, stride_h, stride_w]
-#             if padding == 'VALID':
-#                 output_size_h = (input_size_h - 1) * stride_h + filter_size_h
-#                 output_size_w = (input_size_w - 1) * stride_w + filter_size_w
-#             elif padding == 'SAME':
-#                 output_size_h = (input_size_h - 1) * stride_h + 1
-#                 output_size_w = (input_size_w - 1) * stride_w + 1
-#             else:
-#                 raise ValueError("unknown padding")
-#             output_shape = tf.stack([tf.shape(input)[0],
-#                                      output_channel_size,
-#                                      output_size_h, output_size_w])
-#         else:
-#             raise ValueError("unknown data_format")
-#
-#         # creating weights:
-#         shape = [filter_size_h, filter_size_w,
-#                  output_channel_size, input_channel_size]
-#         W_upconv = tf.get_variable("w", shape=shape, dtype=dtype,
-#                                    initializer=init_w)
-#
-#         shape = [output_channel_size]
-#         b_upconv = tf.get_variable("b", shape=shape, dtype=dtype,
-#                                    initializer=init_b)
-#
-#         upconv = tf.nn.conv2d_transpose(input, W_upconv, output_shape, stride_shape,
-#                                         padding=padding,
-#                                         data_format=data_format)
-#         output = tf.nn.bias_add(upconv, b_upconv, data_format=data_format)
-#
-#         # Now output.get_shape() is equal (?,?,?,?) which can become a problem in the
-#         # next layers. This can be repaired by reshaping the tensor to its shape:
-#         output = tf.reshape(output, output_shape)
-#         # now the shape is back to (?, H, W, C) or (?, C, H, W)
-#
-#         return output
-#
-#
+
+import time
+
+
+def test_compare_crossEntropy():
+    tf.InteractiveSession()
+    y = np.random.normal([100, 100])
+    y_hat = np.random.normal([100, 100])
+
+    _y = tf.constant(y)
+    _y_hat = tf.constant(y_hat)
+
+    nb = 300
+
+    begin = time.time()
+    for i in range(nb):
+        crossEntropy(_y, _y_hat).eval()
+
+    print("adding bias", time.time() - begin)
+    # 20 seconds
+
+    begin = time.time()
+    for i in range(nb):
+        crossEntropy_tooSlow(_y, _y_hat).eval()
+
+    print("with where", time.time() - begin)
+    # 68 seconds
+
+
+
+
+if __name__=="__main__":
+    pass
 
 
 
@@ -351,75 +283,6 @@ def stick_imgs(W, nbChannel2=10, nbChannel3=10):
 
 
 
-
-
-
-
-
-
-
-
-
-
-#
-# def _upscore_layer(self, bottom, shape,
-#                    num_classes, name, debug,
-#                    ksize=4, stride=2):
-#     strides = [1, stride, stride, 1]
-#
-#     with tf.variable_scope(name):
-#         in_features = bottom.get_shape()[3].value
-#
-#         if shape is None:
-#             # Compute shape out of Bottom
-#             in_shape = tf.shape(bottom)
-#
-#             h = ((in_shape[1] - 1) * stride) + 1
-#             w = ((in_shape[2] - 1) * stride) + 1
-#             new_shape = [in_shape[0], h, w, num_classes]
-#         else:
-#             new_shape = [shape[0], shape[1], shape[2], num_classes]
-#         output_shape = tf.stack(new_shape)
-#
-#         # logging.debug("Layer: %s, Fan-in: %d" % (name, in_features))
-#         f_shape = [ksize, ksize, num_classes, in_features]
-#
-#         # create
-#         num_input = ksize * ksize * in_features / stride
-#         stddev = (2 / num_input)**0.5
-#
-#         weights = self.get_deconv_filter(f_shape)
-#         deconv = tf.nn.conv2d_transpose(bottom, weights, output_shape,
-#                                         strides=strides, padding='SAME')
-#
-#         if debug:
-#             deconv = tf.Print(deconv, [tf.shape(deconv)],
-#                               message='Shape of %s' % name,
-#                               summarize=4, first_n=1)
-#
-#     return deconv
-#
-#
-#
-# def get_deconv_filter(f_shape):
-#     width = f_shape[0]
-#     height = f_shape[1]
-#     f = np.ceil(width/2.0)
-#     c = (2 * f - 1 - f % 2) / (2.0 * f)
-#     bilinear = np.zeros([f_shape[0], f_shape[1]])
-#     for x in range(width):
-#         for y in range(height):
-#             value = (1 - abs(x / f - c)) * (1 - abs(y / f - c))
-#             bilinear[x, y] = value
-#     weights = np.zeros(f_shape)
-#     for i in range(f_shape[2]):
-#         weights[:, :, i, i] = bilinear
-#
-#     init = tf.constant_initializer(value=weights,
-#                                    dtype=tf.float32)
-#     return tf.get_variable(name="up_filter", initializer=init,
-#                            shape=weights.shape)
-#
 
 
 

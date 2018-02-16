@@ -71,7 +71,6 @@ class Model_bounding:
         tf.summary.image("X",self._X,max_outputs=12)
 
         self._Y_class = tf.placeholder(name="Y_class", dtype=tf.float32,shape=(None,nbCategories))
-
         self._Y_reg = tf.placeholder(name="Y_reg", dtype=tf.float32,shape=(None,nbRegressor))
 
 
@@ -85,7 +84,7 @@ class Model_bounding:
 
 
         self._loss_class = 20.*ing.crossEntropy(self._Y_class, self.hat.Y_prob,True)
-        self._loss_reg=  tf.reduce_mean(tf.reduce_mean((self._Y_reg - self.hat.Y_bound) ** 2))
+        self._loss_reg=  tf.reduce_mean((self._Y_reg - self.hat.Y_bound) ** 2)
 
 
         self._accuracy=tf.reduce_mean(tf.cast(tf.equal(self.hat.Y_cat,tf.argmax(self._Y_class,dimension=1)),dtype=tf.float32))

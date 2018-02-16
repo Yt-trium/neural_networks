@@ -173,7 +173,8 @@ class Model_fullyConv:
         trainProcess = self._minimizer if fit else tf.constant(0.)
 
         feed_dict = {self._X: X, self._Y_cat: Y_cat}
-        _, self.loss, self.accuracy,self.accuracy_trivial,self.summary=self.sess.run([trainProcess, self._loss, self._accuracy,self._accuracy_trivial,self._summary],feed_dict=feed_dict)
+        _, self.loss, self.accuracy,self.accuracy_trivial,self.summary=\
+            self.sess.run([trainProcess, self._loss, self._accuracy,self._accuracy_trivial,self._summary],feed_dict=feed_dict)
 
         if self.verbose:
             print("loss:", self.loss)

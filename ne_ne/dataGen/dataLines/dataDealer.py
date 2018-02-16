@@ -139,7 +139,7 @@ def addOneCurve_Y_is_width(points: list, widths:list, img: np.ndarray, Y_class: 
 
 
 
-def batch_of_lines_Y_is_orientation(nbAngleCat:int, img_size:int, batchSize:int):
+def batch_of_lines_Y_is_orientation(nbAngleCat:int, img_size:int, batchSize:int,nbLinesPerImg = 4):
 
     imgs = np.ones([batchSize, img_size, img_size], dtype=np.float32)
     Ys_class = np.zeros([batchSize, img_size, img_size], dtype=np.uint8)
@@ -148,7 +148,7 @@ def batch_of_lines_Y_is_orientation(nbAngleCat:int, img_size:int, batchSize:int)
 
     for b in range(batchSize):
 
-        nbLinesPerImg = 4
+
         for j in range(nbLinesPerImg):
             KO=True
             while KO:
