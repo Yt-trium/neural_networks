@@ -76,16 +76,16 @@ ils indique que faire un clip sur Y_hay n'est pas une bonne idée car cela arrè
 J'ai tester  :  un clip  "grossier"  ex : tf.clip_by_value(Y_hat, 0.0001, 0.9999) : cela tue vraiment l'apprentissage.
 Un clip plus fin ne change pas grand chose, mais il faudrait faire des tests plus poussé.
    """
-def crossEntropy(Y, Y_hat, axis=None):
-    return - tf.reduce_mean(Y*tf.log(Y_hat+1e-10),axis=axis)
+def crossEntropy(Y, Y_hat):
+    return - tf.reduce_mean(Y*tf.log(Y_hat+1e-10))
 
 
 """ d'après https://stackoverflow.com/questions/33712178/tensorflow-nan-bug.
  Mais c'est vraiment trop long (4 fois plus long d'après le test ci-dessous)
  """
-def crossEntropy_tooSlow(x, y, axis=None):
+def crossEntropy_tooSlow(x, y):
   safe_y = tf.where(tf.equal(x, 0.), tf.ones_like(y), y)
-  return -tf.reduce_mean(x * tf.log(safe_y), axis=axis)
+  return -tf.reduce_mean(x * tf.log(safe_y))
 
 
 
