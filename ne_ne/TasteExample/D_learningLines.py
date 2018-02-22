@@ -239,7 +239,7 @@ def drawOne(imgs,title,vmax,cmap="jet"):
 
 def tasteClassif():
 
-    logDir="/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/log"
+    logDir="../log"
     if tf.gfile.Exists(logDir):
         tf.gfile.DeleteRecursively(logDir)
 

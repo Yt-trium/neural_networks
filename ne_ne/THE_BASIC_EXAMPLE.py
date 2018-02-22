@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 
-logDir = "/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/log"
+logDir = "./log"
 
 
 class Model_ridge:

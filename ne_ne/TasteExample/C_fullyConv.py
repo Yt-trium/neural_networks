@@ -222,7 +222,7 @@ class Model_fullyConv:
 
 def taste():
 
-    logDir="/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/log"
+    logDir="../log"
     if tf.gfile.Exists(logDir):
         tf.gfile.DeleteRecursively(logDir)
 

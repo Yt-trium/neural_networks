@@ -81,7 +81,7 @@ class Model_LeNet:
               """
             self._accuracy=tf.reduce_mean(tf.cast(tf.equal(Y_hat_binary, self._Y), tf.float32))
         else:
-            self._loss=ing.crossEntropy(self._Y,self.hat.Y,True)
+            self._loss=ing.crossEntropy(self._Y,self.hat.Y)
             Y_cat=tf.argmax(self._Y,dimension=1)
             Y_cat_hat=tf.argmax(self.hat.Y,dimension=1)
             self._accuracy=tf.reduce_mean(tf.cast(tf.equal(Y_cat,Y_cat_hat),tf.float32))

@@ -83,7 +83,7 @@ class Model_bounding:
         #self._Y_class_hat, self._Y_reg_hat = xToY.getYclass_Yreg(self._X, self.keep_proba)
 
 
-        self._loss_class = 20.*ing.crossEntropy(self._Y_class, self.hat.Y_prob,True)
+        self._loss_class = 20.*ing.crossEntropy(self._Y_class, self.hat.Y_prob)
         self._loss_reg=  tf.reduce_mean((self._Y_reg - self.hat.Y_bound) ** 2)
 
 
@@ -182,7 +182,7 @@ def taste():
       quand l'ordi se trompe de catégorie, il ne se trompe aussi dans la bounding box...
     """
 
-    logDir="/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/TasteExample/log"
+    logDir="../log"
     if tf.gfile.Exists(logDir):
         tf.gfile.DeleteRecursively(logDir)
 
