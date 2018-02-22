@@ -6,7 +6,7 @@ import numpy as np
 np.set_printoptions(precision=2,linewidth=3000)
 
 
-path_perso='/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/dataGen/'
+path_perso='../dataGen/'
 MAX_NB_IMG=500
 IMG_SIZE=28
 

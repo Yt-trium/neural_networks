@@ -10,7 +10,7 @@ MAX_NB_IMG=500
 IMG_SIZE=28
 
 
-location='/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/dataGen/dataContour/'
+location='  ../dataGen/dataContour/'
 
 def get_one_data_withGT(nbImg:int, imgType:str):
 
