@@ -1,3 +1,4 @@
 #idea-files
 .idea/
 ne_ne/log
+__pycache__
