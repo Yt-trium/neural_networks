@@ -76,8 +76,8 @@ ils indique que faire un clip sur Y_hay n'est pas une bonne idée car cela arrè
 J'ai tester  :  un clip  "grossier"  ex : tf.clip_by_value(Y_hat, 0.0001, 0.9999) : cela tue vraiment l'apprentissage.
 Un clip plus fin ne change pas grand chose, mais il faudrait faire des tests plus poussé.
    """
-def crossEntropy(Y, Y_hat, axis=None):
-    return - tf.reduce_mean(Y*tf.log(Y_hat+1e-10),axis=axis)
+def crossEntropy(Y, Y_hat):
+    return - tf.reduce_mean(Y*tf.log(Y_hat+1e-10))
 
 
 """ d'après https://stackoverflow.com/questions/33712178/tensorflow-nan-bug.
@@ -158,7 +158,7 @@ def weight_variable(shape, stddev=0.1, name=None):
 
 """Dans le cours de Stanfort, Karpathy indique que cela serait mieux en prenant des biais nul. """
 def bias_variable(shape, name=None):
-    initial = tf.constant(0.1, shape=shape)
+    initial = tf.constant(0.0, shape=shape)
     return tf.Variable(initial_value=initial,name=name)
 
 
@@ -208,14 +208,98 @@ def batch_norm(x, n_out, phase_train, scope='bn', decay=0.9, eps=1e-5):
 
 
 def summarizeW_asImage(W):
-    print("W_shape",W.name,W.get_shape().as_list())
     mat=stick_imgs(W)
     mat_shape=mat.get_shape().as_list()
     mat=tf.reshape(mat,shape=[1,mat_shape[0],mat_shape[1],1])
     tf.summary.image(W.name,mat, max_outputs=1)
 
 
+
+#TODO ça ne marche pas
+def summarize_batch_images_NB(X, title:str, min_batch_size:int):
+    """
+    :param X: images, shape=[batch_size,w,h]
+    :param title:
+    :param min_batch_size:
+    """
+    if min_batch_size >= 25:
+        nn = 5
+    elif min_batch_size >= 16:
+        nn = 4
+    elif min_batch_size >= 4:
+        nn = 2
+    else:
+        nn = 1
+
+    trans = tf.transpose(X[:nn*nn], perm=[1, 2, 0])
+    trans = tf.reshape(trans, shape=[28, 28, nn, nn])
+    mat = stick_imgs(trans)
+    tf.summary.image(title, mat, max_outputs=1)
+
+
+import matplotlib
+import matplotlib.cm
+
+def colorize(value, vmin=None, vmax=None, cmap=None):
+    """
+    A utility function for TensorFlow that maps a grayscale image to a matplotlib
+    colormap for use with TensorBoard image summaries.
+    By default it will normalize the input value to the range 0..1 before mapping
+    to a grayscale colormap.
+    Arguments:
+      - value: 2D Tensor of shape [height, width] or 3D Tensor of shape
+        [height, width, 1].
+      - vmin: the minimum value of the range used for normalization.
+        (Default: value minimum)
+      - vmax: the maximum value of the range used for normalization.
+        (Default: value maximum)
+      - cmap: a valid cmap named for use with matplotlib's `get_cmap`.
+        (Default: 'gray')
+    Example usage:
+    ```
+    output = tf.random_uniform(shape=[256, 256, 1])
+    output_color = colorize(output, vmin=0.0, vmax=1.0, cmap='viridis')
+    tf.summary.image('output', output_color)
+    ```
+
+    Returns a 3D tensor of shape [height, width, 3].
+    """
+
+    # normalize
+    vmin = tf.reduce_min(value) if vmin is None else vmin
+    vmax = tf.reduce_max(value) if vmax is None else vmax
+    value = (value - vmin) / (vmax - vmin)  # vmin..vmax
+
+    # squeeze last dim if it exists
+    value = tf.squeeze(value)
+
+    # quantize
+    indices = tf.to_int32(tf.round(value * 255))
+
+    # gather
+    cm = matplotlib.cm.get_cmap(cmap if cmap is not None else 'gray')
+    colors = tf.constant(cm.colors, dtype=tf.float32)
+    value = tf.gather(colors, indices)
+
+    return value
+
+
+
+
+
+
+
+
+
+
 def stick_imgs(W, nbChannel2=10, nbChannel3=10):
+    """
+
+    :param W: de shape [w,h,nb in channel, nb out channel]
+    :param nbChannel2:
+    :param nbChannel3:
+    :return:
+    """
 
     W_shape = W.get_shape().as_list()
 
@@ -240,6 +324,11 @@ def stick_imgs(W, nbChannel2=10, nbChannel3=10):
     mat=tf.concat(columns,1)
 
     return mat
+
+
+
+
+
 
 
 
@@ -275,7 +364,11 @@ def test_compare_crossEntropy():
 
 
 if __name__=="__main__":
+
     pass
+
+
+
 
 
 

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 """supprime certain warning pénible de tf"""
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
+np.set_printoptions(linewidth=10000,suppress=True)
 
 
 """
@@ -210,7 +210,8 @@ def demiSobel():
 
 
 
-demiSobel()
+
+
 
 
 

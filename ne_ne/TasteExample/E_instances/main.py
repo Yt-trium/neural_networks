@@ -1,6 +1,6 @@
 import matplotlib
 
-from ne_ne.TasteExample.E_instances.dataDealer import oneBatch_lines_instances
+from ne_ne.TasteExample.E_instances.dataDealer import oneBatch_of_rect_instances
 from ne_ne.TasteExample.E_instances.model import Model_fullyConv_instances
 
 matplotlib.use('TkAgg') #truc bizarre à rajouter spécifique à mac+virtualenv
@@ -31,41 +31,45 @@ def drawOne(imgs,title,vmax,cmap="jet"):
 
 
 
-
+import time
 def tasteClassif():
 
     logDir="/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/log"
-    if tf.gfile.Exists(logDir):
+
+    reset=True
+    if reset and tf.gfile.Exists(logDir):
         tf.gfile.DeleteRecursively(logDir)
 
 
     img_size=28
-    nb_instance_max=10
+    nb_instance_max=4
 
-    """ le background n'est pas une catégorie fournis dans le GT, 
-    MAIS je pense  qu'il faut qu'il y ai une catégorie supplémentaire signifiant 'autre pixel' 
-      Le model y mettra les pixels qui n'arrive pas à classer dans une instance"""
-    nbCat = nb_instance_max
+    """ +1 pout le background """
+    nbCat = nb_instance_max+1
 
-    """attention Y est maintenant d'ordre 4 : chaque strate représentant une catégorie"""
-    dataDealer=lambda batchSize: oneBatch_lines_instances(batchSize=batchSize,img_size=img_size,nbLinesPerImage=nb_instance_max ,withBackground=False)
+    """attention Y est d'ordre 4 : chaque strate représentant une catégorie = une instance ou le background"""
+    dataDealer=lambda batchSize: oneBatch_of_rect_instances(batchSize=batchSize, img_size=img_size, nbLinesPerImage=nb_instance_max)
 
 
-    model = Model_fullyConv_instances(28, 28, 1, nbCat,favoritism=None)
+
+    model = Model_fullyConv_instances(28, 28, 1, nbCat,favoritism=None,depth0=128,depth1=64)
     model.verbose = True
     model.nbConsecutiveOptForOneFit=10
-    model.learning_rate=1e-2
-    batchSize=50
+    batchSize=10
 
 
-    summary_writer_train = tf.summary.FileWriter(logDir, model.sess.graph)
+    model.learning_rate=1e-4
+
+    now = time.time()
+    summary_writer_train = tf.summary.FileWriter(logDir+"/"+str(now), model.sess.graph)
 
 
-    nbStep=2000
+    nbStep=200
 
     lossTrain=np.zeros(nbStep)
     lossValid = np.zeros(nbStep)
     lossValid[:]=np.nan
+
 
 
     try:
@@ -76,9 +80,12 @@ def tasteClassif():
             model.fit(X_batch, Y_batch,itr)
 
             lossTrain[itr] = model.loss
-            summary_writer_train.add_summary(model.summary,global_step=itr)
+            summary_writer_train.add_summary(model.summary,global_step=time.time()-now)
 
-            if itr%20==0:
+            # if itr==10:
+            #     model.learning_rate=5e-4
+
+            if itr%5==0:
                 print("\nVALIDATION")
                 X_val, Y_val = dataDealer(batchSize)
                 model.validate(X_val, Y_val,itr)
@@ -115,7 +122,7 @@ def tasteClassif():
     draw_proba_Vs_cat=1
     if draw_proba_Vs_cat==0:
         for i in range(0,nbCat):
-            drawOne(hat_Y_test_proba[:, :, :,i],"proba cat:"+str(i),1)
+            drawOne(hat_Y_test_proba[:, :, :,i],"proba cat:"+str(i-1),1)
     else:
         drawOne(hat_Y_test_cat[:, :, :], "hat_cat", nbCat)
 

@@ -3,7 +3,7 @@ import tensorflow as tf
 import matplotlib
 import numpy as np
 
-from ne_ne.TasteExample.E_instances.dataDealer import oneBatch_lines_instances
+from ne_ne.TasteExample.E_instances.dataDealer import oneBatch_of_rect_instances
 
 np.random.seed(1234132)
 
@@ -91,8 +91,14 @@ def invariant_IoU_batch(Y, Y_hat, epsilon=1e-6):
 
 
 
-tf.InteractiveSession()
+
 def matching_IoU(Y, Y_hat, epsilon=1e-6):
+    """
+    :param Y: de shape[img_h,img_w,nb_cat]
+    :param Y_hat: idem
+    :param epsilon: pour éviter une div par zéro
+    :return:
+    """
 
 
     norm = norm1_tf(Y)
@@ -127,6 +133,29 @@ def matching_IoU(Y, Y_hat, epsilon=1e-6):
     return tf.reduce_sum(tf.diag_part(A_perm))
 
 
+def just_IoU_batch(Y,Y_hat,epsilon=1e-6):
+    """
+    :param Y: de shape [batch_size,img_h,img_w]
+    :param Y_hat: idem
+    :param epsilon: pour éviter une div par zéro
+    :return:
+    """
+
+    """ sum_i,j Y[b,i,j] """
+    norm=tf.reduce_sum(Y,axis=[1,2])
+    norm_hat=tf.reduce_sum(Y_hat,axis=[1,2])
+
+    """ sca = sum_i,j  Y[b,i,j] Y_hat[b,i,j]     """
+    sca = tf.reduce_sum(Y * Y_hat,axis=[1,2])
+
+    IoU=  sca / (epsilon + norm + norm_hat)
+    """ somme sur le batch """
+    return tf.reduce_mean(IoU)
+
+
+
+
+
 
 
 def matching_IoU_batch(Ys, Ys_hat, epsilon=1e-6):
@@ -138,7 +167,7 @@ def matching_IoU_batch(Ys, Ys_hat, epsilon=1e-6):
 
     Ys_Ys_hat=tf.stack([Ys,Ys_hat],axis=1)
 
-    return tf.reduce_sum(tf.map_fn(func,Ys_Ys_hat))
+    return tf.reduce_mean(tf.map_fn(func,Ys_Ys_hat))
 
 
 
@@ -167,7 +196,7 @@ def invariant_crossEntropy(Y, Y_hat, epsilon=1e-6):
 
 
 
-def simple_IoU(Y, Y_hat, epsilon=1e-6):
+def sumMax_IoU(Y, Y_hat, epsilon=1e-6):
 
     n=Y.get_shape().as_list()[2]
 
@@ -186,7 +215,7 @@ def simple_IoU(Y, Y_hat, epsilon=1e-6):
 
 
 
-def simple_IoU_batch(Y, Y_hat, epsilon=1e-6):
+def sumMax_IoU_batch(Y, Y_hat, epsilon=1e-6):
 
     n=Y.get_shape().as_list()[3]
 
@@ -210,7 +239,7 @@ def test_optimization(withBackground:bool):
     nbInstances = 40
 
 
-    Xs,Ys=oneBatch_lines_instances(1, img_size, nbInstances, withBackground)
+    Xs,Ys=oneBatch_of_rect_instances(1, img_size, nbInstances, withBackground)
     X,Y=Xs[0],Ys[0]
     X=np.reshape(X,[img_size,img_size])
 
@@ -296,7 +325,7 @@ def test_optimization_batch(withBackground: bool):
     nbInstances = 12
     batch_size=2
 
-    Xs, Ys = oneBatch_lines_instances(1, img_size, nbInstances, withBackground)
+    Xs, Ys = oneBatch_of_rect_instances(1, img_size, nbInstances, withBackground)
     X, Y = Xs[0], Ys[0]
     X = np.reshape(X, [img_size, img_size])
 
@@ -496,7 +525,7 @@ def test_zero_dist():
 
 
 
-    Xs,Ys=oneBatch_lines_instances(1, img_size, nbInstances, withBackground)
+    Xs,Ys=oneBatch_of_rect_instances(1, img_size, nbInstances, withBackground)
     X,Y=Xs[0],Ys[0]
     print("X.shape,Y.shape",X.shape,Y.shape)
     nb_cat = Y.shape[2]

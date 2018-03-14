@@ -1,0 +1,8 @@
+
+
+
+Petite commande ssh bien pratique pour visualiser le tensorboard distant sur ta machine (A lancer en local) :
+
+ssh -N -f -L localhost:16006:localhost:6006 aabreu@mivgpu1.u-strasbg.fr
+
+

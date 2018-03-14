@@ -1,17 +1,18 @@
-import matplotlib
 
-matplotlib.use('TkAgg')  # truc bizarre à rajouter spécifique à mac+virtualenv
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
-
-logDir = "/Users/vigon/GoogleDrive/permanent/python/neurones/ne_ne/log"
+import os
+logDir = "log"
 
 
 class Model_ridge:
 
 
     def __init__(self,savedir:str=None):
+
+
+        os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"]="1, 2, 3"
 
         """les 2 placeholder correspondant à l'entrée et à la sortie"""
         self._X = tf.placeholder(name="X", dtype=tf.float32)
@@ -192,7 +193,6 @@ def unitaryTaste():
 
     model=Model_ridge("/tmp/model.ckpt")
 
-
     for itr in range(60,100):
 
         model.fit(dataX, dataY)
@@ -200,18 +200,20 @@ def unitaryTaste():
         summary_writer.add_summary(model.summary_op, itr)
 
 
-
-    plt.plot(losses)
-    plt.annotate("lr = 1e-4 ", xy=(0, 0))
-    plt.annotate("lr = 0.1 ", xy=(20, 0))
-    plt.annotate("wd = 0. ", xy=(40, 0))
-    plt.annotate("restor", xy=(60, 0))
-    plt.plot([0, 0], [0, 2], "--")
-    plt.plot([20, 20], [0, 2], "--")
-    plt.plot([40, 40], [0, 2], "--")
-    plt.plot([60, 60], [0, 2], "--")
-
-    plt.show()
+    #
+    #
+    #
+    # plt.plot(losses)
+    # plt.annotate("lr = 1e-4 ", xy=(0, 0))
+    # plt.annotate("lr = 0.1 ", xy=(20, 0))
+    # plt.annotate("wd = 0. ", xy=(40, 0))
+    # plt.annotate("restor", xy=(60, 0))
+    # plt.plot([0, 0], [0, 2], "--")
+    # plt.plot([20, 20], [0, 2], "--")
+    # plt.plot([40, 40], [0, 2], "--")
+    # plt.plot([60, 60], [0, 2], "--")
+    #
+    # plt.show()
 
 
     model.close()
