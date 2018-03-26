@@ -114,14 +114,14 @@ def tasteClassif():
     X=X[:,:,:,0]
 
 
-    vmax=np.max(X)
+    vmax=nbStrates
     vmin=0
     drawOne(X,"X",vmin,vmax,cmap="gray")
 
 
-    drawOne(np.argmax(Y_cat_hat,axis=3), "hat cat", vmin, vmax, "jet")
+    drawOne(np.sum(Y_cat_hat,axis=3), "hat cat", vmin, vmax, "jet")
 
-    drawOne(np.argmax(Y_cat,axis=3), "", vmin, vmax, "jet")
+    drawOne(np.sum(Y_cat,axis=3), "Y_cat", vmin, vmax, "jet")
 
 
 

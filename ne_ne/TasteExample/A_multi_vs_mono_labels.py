@@ -217,4 +217,4 @@ def taste(multi_label:bool):
 
 if __name__=="__main__":
 
-    taste(False)
+    taste(True)

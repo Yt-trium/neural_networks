@@ -65,9 +65,11 @@ def addOneRect(either__any_disjoint_separated:int, pointA, pointB, img:np.ndarra
                 # la distance au centre c'est pas terrible  Y_reg[i,j,0]=np.sqrt(np.sum((point-center)**2))
                 """ min_i   sum_j (point[j]-contour[i,j])**2 """
                 dist=int(np.floor(np.min(np.sqrt(np.sum((point - contour) ** 2, axis=1)))))
-                if dist>=nbStrate-1: dist=nbStrate-1
+                if dist>nbStrate-1: dist=nbStrate-1
 
-                Y_strate[i, j, dist] = 1
+                Y_strate[i, j, :dist+1] = 1
+                #opur avoir des strates disjointes, la formule c'est Y_strate[i, j, dist] = 1
+
 
         # part=Y_reg[pointA[0]:pointB[0] + 1, pointA[1]:pointB[1],0]
         # part-=np.max(part)
@@ -145,9 +147,7 @@ if __name__=="__main__":
         plt.imshow(Xs[i,:,:,0],cmap="gray")
 
 
-
-
-    Ys=np.argmax(Ys_strate[:,:,:,:],axis=3)
+    Ys=np.sum(Ys_strate[:,:,:,:],axis=3)
 
 
     plt.figure()

@@ -6,3 +6,4 @@ Petite commande ssh bien pratique pour visualiser le tensorboard distant sur ta 
 ssh -N -f -L localhost:16006:localhost:6006 aabreu@mivgpu1.u-strasbg.fr
 
 
+Utiliser screen pour lancer plusieur terminaux, plusieur process sans qu'ils se détachent.

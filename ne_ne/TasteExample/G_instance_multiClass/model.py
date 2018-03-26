@@ -115,7 +115,7 @@ class Decoder:
 
         self.Y_cat_sum=tf.reduce_sum(self.Y_proba,axis=3)
 
-        self.Y_cat=tf.argmax(self.Y_proba,axis=3)
+        #self.Y_cat=tf.argmax(self.Y_proba,axis=3)
 
 
 
@@ -153,17 +153,16 @@ class Model_fullyConv_regCat:
         """la sorties est un volume 7*7*64.  """
         encoder = Encoder(self._X, nbChannels)
 
-        self.hat=Decoder(encoder,  nbCategories, self.keep_proba, favoritism, depth0, depth1,False)
+        self.hat=Decoder(encoder,  nbCategories, self.keep_proba, favoritism, depth0, depth1,True)
 
         self.hat_background=Decoder(encoder,2,self.keep_proba,favoritism,depth0, depth1,False)
-
 
 
         """ les loss qu'on suivra sur le long terme. Les coef, c'est juste pour avoir des grandeurs faciles à lire  """
 
         where=tf.cast((self._Y_background[:,:,:,1]==1),dtype=tf.float32)
         self._loss_background= - tf.reduce_mean( self._Y_background * tf.log(self.hat_background.Y_proba + 1e-10))
-        self._loss_cat =  - tf.reduce_mean(self._Y_cat * tf.log(self.hat.Y_proba + 1e-10))
+        self._loss_cat =  ing.crossEntropy_multiLabel(self._Y_cat,self.hat.Y_proba)
 
         self._penalty=10*sobel_penalty(self.hat.Y_proba,self.nbCategories)
 
@@ -171,7 +170,7 @@ class Model_fullyConv_regCat:
             mais s'il est trop petit le background se transforme en damier !"""
 
 
-        self._loss=self._loss_cat+self._loss_background
+        self._loss=self._loss_cat#+self._loss_background
 
 
         tf.summary.scalar("loss", self._loss)
@@ -221,9 +220,9 @@ class Model_fullyConv_regCat:
 
         if self.summaryEither_cat_proba==0:
 
-            output=tf.expand_dims(tf.cast(self.hat.Y_cat,dtype=tf.float32),3)
+            output=tf.expand_dims(tf.cast(self.hat.Y_cat_sum,dtype=tf.float32),3)
             output_color = ing.colorize(output, vmin=0.0, vmax=self.nbCategories, cmap='plasma')
-            tf.summary.image("Y hat strates", output_color)
+            tf.summary.image("Y hat strates", output_color,max_outputs=max_outputs)
 
             # output = tf.expand_dims(tf.cast(self._Y_cat_sum,dtype=tf.float32),3)
             # output_color = ing.colorize(output, vmin=0.0, vmax=self.nbCategories, cmap='plasma') #'viridis', 'plasma', 'inferno', 'magma'
